@@ -89,8 +89,11 @@ let currentStoryStep = 0;
 
 function showStoryStep(index) {
     const step = storySteps[index];
+
+    // Update state FIRST before anything reads it
     currentScenario = step.scenario;
     currentYear = step.year;
+    currentStoryStep = index;
 
     // Update UI controls to match
     d3.select("#year-slider").property("value", currentYear);
@@ -101,7 +104,7 @@ function showStoryStep(index) {
     // Update story panel text
     const scenarioLabel = { ssp126: "🌱 Low Emissions", ssp245: "⚠️ Medium Emissions", ssp585: "🔥 High Emissions" };
     const scenarioClass = { ssp126: "low", ssp245: "medium", ssp585: "high" };
-    
+
     document.getElementById("story-year").textContent = step.year;
     document.getElementById("story-title").innerHTML = `${step.title} <span class="story-scenario-tag ${scenarioClass[step.scenario]}">${scenarioLabel[step.scenario]}</span>`;
     document.getElementById("story-text").textContent = step.text;
@@ -110,6 +113,10 @@ function showStoryStep(index) {
     // Disable prev/next buttons at boundaries
     document.getElementById("story-prev").disabled = index === 0;
     document.getElementById("story-next").disabled = index === storySteps.length - 1;
+
+    // Show sidebar and update it AFTER state is set
+    document.getElementById("story-sidebar").classList.add("visible");
+    updateSidebar();
 
     loadWorldMap();
     updateInsights();
@@ -165,6 +172,48 @@ async function loadData() {
                 Make sure cmip6_real_data.csv is in the same folder.
             </div>
         `;
+    }
+}
+function updateSidebar() {
+    const yearIndex = years.indexOf(currentYear);
+    if (yearIndex === -1) return;
+
+    const anomaly = dataByScenario[currentScenario][yearIndex];
+    const arcticAnomaly = anomaly * ARCTIC_MULTIPLIER;
+    const icePercent = Math.max(0, 100 - (arcticAnomaly / 6) * 100);
+    const fillPercent = Math.min(100, (anomaly / 5.5) * 100);
+
+    let tempColor;
+    if (anomaly > 5) tempColor = "#8e44ad";
+    else if (anomaly > 4) tempColor = "#e74c3c";
+    else if (anomaly > 3) tempColor = "#f39c12";
+    else if (anomaly > 2) tempColor = "#f1c40f";
+    else if (anomaly > 1) tempColor = "#93c5fd";
+    else tempColor = "#2ecc71";
+
+    document.getElementById("sidebar-temp").textContent = `${anomaly.toFixed(2)}°C`;
+    document.getElementById("sidebar-temp").style.color = tempColor;
+    document.getElementById("sidebar-thermo-fill").style.height = `${fillPercent}%`;
+    document.getElementById("sidebar-thermo-fill").style.background = tempColor;
+    document.getElementById("sidebar-ice").textContent = `${Math.round(icePercent)}%`;
+    document.getElementById("sidebar-ice-fill").style.width = `${icePercent}%`;
+
+    // stripes
+    const stripesEl = document.getElementById("sidebar-stripes");
+    stripesEl.innerHTML = "";
+    for (let i = 0; i <= yearIndex; i++) {
+        const a = dataByScenario[currentScenario][i];
+        let c;
+        if (a > 5) c = "#8e44ad";
+        else if (a > 4) c = "#e74c3c";
+        else if (a > 3) c = "#f39c12";
+        else if (a > 2) c = "#f1c40f";
+        else if (a > 1) c = "#93c5fd";
+        else c = "#2ecc71";
+        const stripe = document.createElement("div");
+        stripe.className = "sidebar-stripe";
+        stripe.style.background = c;
+        stripesEl.appendChild(stripe);
     }
 }
 
@@ -233,8 +282,13 @@ function setupLanding() {
         dismissLanding();
         setTimeout(() => {
             document.getElementById("story-panel").style.display = "block";
+            document.getElementById("story-sidebar").classList.add("visible");
+            document.getElementById("story-mode-btn").textContent = "✕ Exit Story Mode";
+            document.querySelector(".meters-row").style.display = "none";
+            document.querySelector(".insights-panel").style.display = "none";
+            // document.getElementById("chart").style.height = "400px";  // ← before the setTimeout below
             currentStoryStep = 0;
-            showStoryStep(0);
+            setTimeout(() => showStoryStep(0), 520);
             document.getElementById("story-panel").scrollIntoView({ behavior: "smooth" });
         }, 800);
     });
@@ -626,7 +680,19 @@ function setupEventListeners() {
         const panel = document.getElementById("story-panel");
         const isHidden = panel.style.display === "none" || panel.style.display === "";
         panel.style.display = isHidden ? "block" : "none";
-        if (isHidden) showStoryStep(0);
+        document.getElementById("story-mode-btn").textContent = isHidden ? "✕ Exit Story Mode" : "📖 Story Mode";
+        document.querySelector(".meters-row").style.display = isHidden ? "none" : "flex";
+        document.querySelector(".insights-panel").style.display = isHidden ? "none" : "block";
+        // document.getElementById("chart").style.height = isHidden ? "400px" : "550px";
+        const sidebar = document.getElementById("story-sidebar");
+        sidebar.classList.toggle("visible", isHidden);
+        if (isHidden) {
+            currentStoryStep = 0;
+            setTimeout(() => showStoryStep(0), 520);
+        } else {
+            setTimeout(() => loadWorldMap(), 520);
+            document.querySelector(".controls").scrollIntoView({ behavior: "smooth" });
+        }
     });
     
     document.getElementById("story-prev").addEventListener("click", () => {

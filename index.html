@@ -13,29 +13,26 @@
 <div class="container">
     <div id="landing-screen">
         <div class="landing-slide active" id="slide-1">
-            <div class="slide-label">AND</div>
             <div class="slide-icon">🌡️</div>
-            <h2 class="slide-title">Earth is warming</h2>
+            <h2 class="slide-title">Our Earth is warming</h2>
             <p class="slide-text">Since 1850, global temperatures have risen about 1.2°C. Scientists project continued warming through 2100, with the Arctic warming 2–3× faster than the rest of the world.</p>
             <button class="slide-next-btn" onclick="goToSlide(2)">Continue →</button>
         </div>
-    
+
         <div class="landing-slide" id="slide-2">
-            <div class="slide-label">BUT</div>
             <div class="slide-icon">⚡</div>
-            <h2 class="slide-title">It depends on emissions</h2>
+            <h2 class="slide-title">The good news? It depends on our emissions choices today.</h2>
             <p class="slide-text">Future warming varies dramatically — from 1.5°C to 4.5°C — depending entirely on which emission pathway humanity chooses to follow.</p>
             <button class="slide-next-btn" onclick="goToSlide(3)">Continue →</button>
         </div>
-    
+
         <div class="landing-slide" id="slide-3">
-            <div class="slide-label">THEREFORE</div>
             <div class="slide-icon">🔍</div>
-            <h2 class="slide-title">Explore different futures</h2>
+            <h2 class="slide-title">Together, lets explore 3 different futures.</h2>
             <p class="slide-text">This interactive map lets you explore three climate futures year by year — to see how the choices we make today shape the world of tomorrow.</p>
             <button class="slide-next-btn" onclick="goToSlide(4)">See How →</button>
         </div>
-    
+
         <div class="landing-slide" id="slide-4">
             <div class="slide-icon">🌍</div>
             <h2 class="slide-title landing-main-title">Warming Planet</h2>
@@ -46,7 +43,7 @@
                 <button class="landing-btn secondary" id="landing-explore">🔍 Explore For Myself</button>
             </div>
         </div>
-    
+
         <div class="slide-dots">
             <div class="dot active" onclick="goToSlide(1)"></div>
             <div class="dot" onclick="goToSlide(2)"></div>
@@ -64,24 +61,6 @@
         <p>🌡️ <strong>By 2100, will your city be 1.5 degrees Celsius warmer or 5 degrees warmer?</strong> The answer depends entirely on the choices we make today.</p>
         <p class="question">📊 <strong>Research Question:</strong> How do different emission pathways affect global and regional temperature warming by 2100?</p>
     </section>
-
-    <!-- <div class="story-grid">
-        <div class="story-card">
-            <span class="story-label">AND</span>
-            <h3>🌡️ Earth is warming</h3>
-            <p>Since 1850, global temperatures have risen about 1.2 degrees Celsius. Scientists project continued warming through 2100, with the Arctic warming 2 to 3 times faster.</p>
-        </div>
-        <div class="story-card">
-            <span class="story-label">BUT</span>
-            <h3>⚡ It depends on emissions</h3>
-            <p>Future warming varies dramatically from 1.5 to 4.5 degrees Celsius depending on which emission pathway we follow.</p>
-        </div>
-        <div class="story-card">
-            <span class="story-label">THEREFORE</span>
-            <h3>🔍 Explore different futures</h3>
-            <p>This interactive map lets you explore three climate futures year by year to see how today's choices shape tomorrow's world.</p>
-        </div>
-    </div> -->
 
     <div class="controls">
         <button class="play-btn" id="story-mode-btn">📖 Story Mode</button>
@@ -102,6 +81,7 @@
         </div>
         <button class="play-btn" id="play-btn">▶ Play</button>
     </div>
+
     <div id="story-panel" style="display:none;" class="story-panel">
         <div id="story-year" class="story-year-badge">2015</div>
         <div id="story-title" class="story-panel-title"></div>
@@ -112,12 +92,38 @@
             <button id="story-next" class="story-nav-btn">Next →</button>
         </div>
     </div>
+
     <div class="map-container">
         <h3>🗺️ Global Temperature Anomaly Map</h3>
-        <div id="chart"></div>
+        <div class="map-and-sidebar">
+            <div id="chart"></div>
+            <div id="story-sidebar" class="story-sidebar-inline">
+                <div class="sidebar-item">
+                    <div class="sb-label">🌡️ Global Temp</div>
+                    <div class="sb-val" id="sidebar-temp">—</div>
+                    <div class="sidebar-thermometer">
+                        <div class="sidebar-thermo-fill" id="sidebar-thermo-fill"></div>
+                    </div>
+                </div>
+                <div class="sb-divider"></div>
+                <div class="sidebar-item">
+                    <div class="sb-label">❄️ Arctic Sea Ice</div>
+                    <div class="sb-val" id="sidebar-ice" style="color:#89CFF0;">—</div>
+                    <div class="sidebar-ice-bar">
+                        <div class="sidebar-ice-fill" id="sidebar-ice-fill"></div>
+                    </div>
+                    <div class="sb-sublabel">Remaining Ice</div>
+                </div>
+                <div class="sb-divider"></div>
+                <div class="sidebar-item">
+                    <div class="sb-label">📊 Warming Stripes</div>
+                    <div id="sidebar-stripes" class="sidebar-stripes"></div>
+                    <div class="sb-sublabel">Each stripe = 5 yrs</div>
+                </div>
+            </div>
+        </div>
         <p class="viz-note">🌍 Hover over any country to see its temperature anomaly. Countries in red are warming faster.</p>
     </div>
-
     <div class="meters-row">
         <div class="meter-card">
             <h3>🌡️ Global Thermometer</h3>
@@ -143,6 +149,8 @@
         </div>
     </div>
 
+    
+
     <div class="insights-panel">
         <h3>🔑 Key Insights</h3>
         <div class="insights-grid">
@@ -164,7 +172,7 @@
         </div>
     </div>
 
-    <div class="takeaway">
+    <!-- <div class="takeaway">
         <h2>💡 The One Thing Everyone Should Learn</h2>
         <p>The difference between 1.5 degrees Celsius and 4.5 degrees Celsius of warming is not just a number. It is the difference between a livable future and catastrophic heatwaves, sea level rise, and ecosystem collapse. <strong>The Arctic, warming 2 to 3 times faster than the rest of the world, is our early warning system. Your choices today determine which future we get.</strong></p>
     </div>
@@ -180,7 +188,7 @@
         
         <h3>Data Source</h3>
         <p>CMIP6 from NOAA and Google Cloud Public Dataset. The data includes temperature anomaly projections from 2015 to 2100 for SSP1-2.6, SSP2-4.5, and SSP5-8.5 scenarios. Low scenario data is real CMIP6 data; medium and high scenarios use warming ratios of 1.8x and 3.0x based on CMIP6 multi-model means from the IPCC AR6 report.</p>
-    </div>
+    </div> -->
 
     <footer>
         <p>Data: CMIP6 Climate Model Projections | Built with D3.js | Interactive visualization for climate exploration</p>

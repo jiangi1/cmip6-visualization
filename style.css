@@ -217,12 +217,12 @@ header h1 {
     color: #e2e8f0;
 }
 
-#chart {
+/* #chart {
     width: 100%;
     height: 550px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 12px;
-}
+} */
 
 .viz-note {
     font-size: 0.65rem;
@@ -788,4 +788,238 @@ footer {
     font-size: 0.85rem;
     color: #64b5f6;
     font-weight: 600;
+}
+
+/* .story-sidebar {
+    position: fixed;
+    right: -220px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    background: rgba(10, 22, 40, 0.95);
+    border: 1px solid rgba(100, 181, 246, 0.25);
+    border-radius: 16px 0 0 16px;
+    padding: 20px 16px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(12px);
+}
+
+.story-sidebar.visible {
+    right: 0;
+}
+
+.sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.sidebar-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64b5f6;
+    text-align: center;
+}
+
+.sidebar-sublabel {
+    font-size: 0.55rem;
+    color: #475569;
+    text-align: center;
+}
+
+.sidebar-temp-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e74c3c;
+    transition: all 0.5s ease;
+}
+
+.sidebar-thermometer {
+    width: 24px;
+    height: 80px;
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 1.5px solid #475569;
+}
+
+.sidebar-thermo-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 0%;
+    background: #e74c3c;
+    border-radius: 0 0 10px 10px;
+    transition: height 0.8s ease, background 0.5s ease;
+}
+
+.sidebar-ice-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #89CFF0;
+    transition: all 0.5s ease;
+}
+
+.sidebar-ice-bar {
+    width: 80px;
+    height: 12px;
+    background: #1e293b;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #475569;
+}
+
+.sidebar-ice-fill {
+    height: 100%;
+    width: 100%;
+    background: #89CFF0;
+    border-radius: 6px;
+    transition: width 0.8s ease;
+}
+
+.sidebar-stripes {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 160px;
+}
+
+.sidebar-stripe {
+    width: 6px;
+    height: 30px;
+    border-radius: 1px;
+    transition: background 0.3s ease;
+}
+
+.sidebar-divider {
+    height: 1px;
+    background: rgba(100, 181, 246, 0.15);
+    width: 100%;
+} */
+.map-and-sidebar {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+}
+
+#chart {
+    flex: 1;
+    min-width: 0;
+    height: 550px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px 0 0 12px;
+}
+
+.story-sidebar-inline {
+    width: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 0 12px 12px 0;
+    border-left: 1px solid rgba(100, 181, 246, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 0;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                padding 0.5s ease;
+    opacity: 0;
+}
+
+.story-sidebar-inline.visible {
+    width: 180px;
+    padding: 20px 14px;
+    opacity: 1;
+}
+
+.sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.sb-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64b5f6;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.sb-sublabel {
+    font-size: 0.55rem;
+    color: #475569;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.sb-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #e74c3c;
+    transition: all 0.5s ease;
+    white-space: nowrap;
+}
+
+.sidebar-thermometer {
+    width: 24px;
+    height: 80px;
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 1.5px solid #475569;
+}
+
+.sidebar-thermo-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 0%;
+    background: #e74c3c;
+    border-radius: 0 0 10px 10px;
+    transition: height 0.8s ease, background 0.5s ease;
+}
+
+.sidebar-ice-bar {
+    width: 100%;
+    height: 10px;
+    background: #1e293b;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid #475569;
+}
+
+.sidebar-ice-fill {
+    height: 100%;
+    width: 100%;
+    background: #89CFF0;
+    border-radius: 5px;
+    transition: width 0.8s ease;
+}
+
+.sidebar-stripes {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sidebar-stripe {
+    width: 6px;
+    height: 26px;
+    border-radius: 1px;
+}
+
+.sb-divider {
+    height: 1px;
+    background: rgba(100, 181, 246, 0.12);
+    width: 100%;
 }
