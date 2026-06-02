@@ -11,6 +11,50 @@
 </head>
 <body>
 <div class="container">
+    <div id="landing-screen">
+        <div class="landing-slide active" id="slide-1">
+            <div class="slide-label">AND</div>
+            <div class="slide-icon">🌡️</div>
+            <h2 class="slide-title">Earth is warming</h2>
+            <p class="slide-text">Since 1850, global temperatures have risen about 1.2°C. Scientists project continued warming through 2100, with the Arctic warming 2–3× faster than the rest of the world.</p>
+            <button class="slide-next-btn" onclick="goToSlide(2)">Continue →</button>
+        </div>
+    
+        <div class="landing-slide" id="slide-2">
+            <div class="slide-label">BUT</div>
+            <div class="slide-icon">⚡</div>
+            <h2 class="slide-title">It depends on emissions</h2>
+            <p class="slide-text">Future warming varies dramatically — from 1.5°C to 4.5°C — depending entirely on which emission pathway humanity chooses to follow.</p>
+            <button class="slide-next-btn" onclick="goToSlide(3)">Continue →</button>
+        </div>
+    
+        <div class="landing-slide" id="slide-3">
+            <div class="slide-label">THEREFORE</div>
+            <div class="slide-icon">🔍</div>
+            <h2 class="slide-title">Explore different futures</h2>
+            <p class="slide-text">This interactive map lets you explore three climate futures year by year — to see how the choices we make today shape the world of tomorrow.</p>
+            <button class="slide-next-btn" onclick="goToSlide(4)">See How →</button>
+        </div>
+    
+        <div class="landing-slide" id="slide-4">
+            <div class="slide-icon">🌍</div>
+            <h2 class="slide-title landing-main-title">Warming Planet</h2>
+            <p class="slide-subtitle">CMIP6 Climate Projections</p>
+            <p class="slide-text">How would you like to explore?</p>
+            <div class="landing-buttons">
+                <button class="landing-btn primary" id="landing-story">📖 Take Me Through the Story</button>
+                <button class="landing-btn secondary" id="landing-explore">🔍 Explore For Myself</button>
+            </div>
+        </div>
+    
+        <div class="slide-dots">
+            <div class="dot active" onclick="goToSlide(1)"></div>
+            <div class="dot" onclick="goToSlide(2)"></div>
+            <div class="dot" onclick="goToSlide(3)"></div>
+            <div class="dot" onclick="goToSlide(4)"></div>
+        </div>
+    </div>
+
     <header>
         <h1>🌍 Warming Planet</h1>
         <p class="subtitle">An Explorable Explanation of CMIP6 Climate Projections</p>
@@ -21,7 +65,7 @@
         <p class="question">📊 <strong>Research Question:</strong> How do different emission pathways affect global and regional temperature warming by 2100?</p>
     </section>
 
-    <div class="story-grid">
+    <!-- <div class="story-grid">
         <div class="story-card">
             <span class="story-label">AND</span>
             <h3>🌡️ Earth is warming</h3>
@@ -37,9 +81,10 @@
             <h3>🔍 Explore different futures</h3>
             <p>This interactive map lets you explore three climate futures year by year to see how today's choices shape tomorrow's world.</p>
         </div>
-    </div>
+    </div> -->
 
     <div class="controls">
+        <button class="play-btn" id="story-mode-btn">📖 Story Mode</button>
         <div class="control-group">
             <label>📊 Scenario:</label>
             <div class="scenario-buttons">
@@ -57,7 +102,16 @@
         </div>
         <button class="play-btn" id="play-btn">▶ Play</button>
     </div>
-
+    <div id="story-panel" style="display:none;" class="story-panel">
+        <div id="story-year" class="story-year-badge">2015</div>
+        <div id="story-title" class="story-panel-title"></div>
+        <div id="story-text" class="story-panel-text"></div>
+        <div class="story-panel-nav">
+            <button id="story-prev" class="story-nav-btn">← Prev</button>
+            <span id="story-counter" class="story-counter">1 / 6</span>
+            <button id="story-next" class="story-nav-btn">Next →</button>
+        </div>
+    </div>
     <div class="map-container">
         <h3>🗺️ Global Temperature Anomaly Map</h3>
         <div id="chart"></div>

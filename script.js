@@ -46,6 +46,74 @@ const regionalMultipliers = {
 };
 const DEFAULT_MULTIPLIER = 1.0;
 
+const storySteps = [
+    {
+        year: 2015,
+        scenario: "ssp245",
+        title: "📍 Where We Are Today",
+        text: "In 2015, the Paris Agreement was signed. Global temperatures are already ~1.2°C above pre-industrial levels. The path we choose from here determines everything."
+    },
+    {
+        year: 2040,
+        scenario: "ssp585",
+        title: "🔥 High Emissions: Early Warning Signs",
+        text: "Under high emissions, the Arctic is warming 3× faster than the global average. Summer sea ice is disappearing. Extreme weather events are becoming the norm."
+    },
+    {
+        year: 2060,
+        scenario: "ssp585",
+        title: "⚠️ The 2°C Threshold Is Crossed",
+        text: "We've passed the critical 2°C threshold. Coral reefs are largely gone, coastal flooding displaces hundreds of millions, and deadly heatwaves strike annually."
+    },
+    {
+        year: 2060,
+        scenario: "ssp126",
+        title: "🌱 Low Emissions: A Different 2060",
+        text: "The same year, under low emissions, warming stays near 1.5°C. Renewable energy dominates. The worst impacts are avoided. The difference is stark — look at the map."
+    },
+    {
+        year: 2100,
+        scenario: "ssp585",
+        title: "💀 High Emissions End of Century",
+        text: "4–5°C of warming. Large parts of the tropics are uninhabitable in summer. Sea levels have risen over a meter. This is the world we leave to future generations."
+    },
+    {
+        year: 2100,
+        scenario: "ssp126",
+        title: "✅ Low Emissions End of Century",
+        text: "~1.5°C of warming. A livable planet. The difference between this and the previous step is entirely determined by choices made in the next 10–20 years."
+    }
+];
+
+let currentStoryStep = 0;
+
+function showStoryStep(index) {
+    const step = storySteps[index];
+    currentScenario = step.scenario;
+    currentYear = step.year;
+
+    // Update UI controls to match
+    d3.select("#year-slider").property("value", currentYear);
+    d3.select("#year-value").text(currentYear);
+    d3.selectAll(".scenario-btn").classed("active", false);
+    d3.select(`[data-scenario="${currentScenario}"]`).classed("active", true);
+
+    // Update story panel text
+    const scenarioLabel = { ssp126: "🌱 Low Emissions", ssp245: "⚠️ Medium Emissions", ssp585: "🔥 High Emissions" };
+    const scenarioClass = { ssp126: "low", ssp245: "medium", ssp585: "high" };
+    
+    document.getElementById("story-year").textContent = step.year;
+    document.getElementById("story-title").innerHTML = `${step.title} <span class="story-scenario-tag ${scenarioClass[step.scenario]}">${scenarioLabel[step.scenario]}</span>`;
+    document.getElementById("story-text").textContent = step.text;
+    document.getElementById("story-counter").textContent = `${index + 1} / ${storySteps.length}`;
+
+    // Disable prev/next buttons at boundaries
+    document.getElementById("story-prev").disabled = index === 0;
+    document.getElementById("story-next").disabled = index === storySteps.length - 1;
+
+    loadWorldMap();
+    updateInsights();
+}
 async function loadData() {
     try {
         const response = await fetch('cmip6_real_data.csv');
@@ -100,6 +168,84 @@ async function loadData() {
     }
 }
 
+// function setupLanding() {
+//     document.getElementById("landing-story").addEventListener("click", () => {
+//         dismissLanding();
+//         // turn on story mode after landing fades
+//         setTimeout(() => {
+//             document.getElementById("story-panel").style.display = "block";
+//             currentStoryStep = 0;
+//             showStoryStep(0);
+//             document.getElementById("story-panel")
+//                 .scrollIntoView({ behavior: "smooth" });
+//         }, 800);
+//     });
+
+//     document.getElementById("landing-explore").addEventListener("click", () => {
+//         dismissLanding();
+//         setTimeout(() => {
+//             document.querySelector(".controls")
+//                 .scrollIntoView({ behavior: "smooth" });
+//         }, 800);
+//     });
+
+//     // also dismiss on scroll
+//     window.addEventListener("scroll", () => dismissLanding(), { once: true });
+// }
+
+// function dismissLanding() {
+//     const screen = document.getElementById("landing-screen");
+//     if (!screen.classList.contains("fade-out")) {
+//         screen.classList.add("fade-out");
+//         setTimeout(() => screen.style.display = "none", 800);
+//     }
+// }
+let currentSlide = 1;
+
+function goToSlide(n) {
+    const prev = document.getElementById(`slide-${currentSlide}`);
+    const next = document.getElementById(`slide-${n}`);
+    const dots = document.querySelectorAll(".dot");
+
+    prev.classList.add("exit");
+    setTimeout(() => {
+        prev.classList.remove("active", "exit");
+    }, 600);
+
+    setTimeout(() => {
+        next.classList.add("active");
+    }, 300);
+
+    dots.forEach((d, i) => d.classList.toggle("active", i === n - 1));
+    currentSlide = n;
+}
+
+function dismissLanding() {
+    const screen = document.getElementById("landing-screen");
+    if (!screen.classList.contains("fade-out")) {
+        screen.classList.add("fade-out");
+        setTimeout(() => screen.style.display = "none", 800);
+    }
+}
+
+function setupLanding() {
+    document.getElementById("landing-story").addEventListener("click", () => {
+        dismissLanding();
+        setTimeout(() => {
+            document.getElementById("story-panel").style.display = "block";
+            currentStoryStep = 0;
+            showStoryStep(0);
+            document.getElementById("story-panel").scrollIntoView({ behavior: "smooth" });
+        }, 800);
+    });
+
+    document.getElementById("landing-explore").addEventListener("click", () => {
+        dismissLanding();
+        setTimeout(() => {
+            document.querySelector(".controls").scrollIntoView({ behavior: "smooth" });
+        }, 800);
+    });
+}
 async function loadWorldMap() {
     try {
         const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json");
@@ -109,26 +255,69 @@ async function loadWorldMap() {
         
         d3.select("#chart").html("");
         
-        const svg = d3.select("#chart")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g");
-        
+        document.querySelectorAll(".fs-btn").forEach(b => b.remove());
+        // Add fullscreen button
+        const fsBtn = document.createElement("button");
+        fsBtn.className = "fs-btn";
+        fsBtn.innerHTML = "⛶ Fullscreen";
+        fsBtn.style.cssText = `
+            position: absolute; top: 10px; right: 10px;
+            padding: 6px 14px; border-radius: 20px; border: none;
+            background: rgba(100,181,246,0.2); color: #64b5f6;
+            cursor: pointer; font-size: 0.75rem; font-weight: 600;
+            backdrop-filter: blur(4px); z-index: 10;
+            border: 1px solid rgba(100,181,246,0.3);
+        `;
+        fsBtn.onclick = () => {
+            const chartEl = document.getElementById("chart");
+            if (!document.fullscreenElement) {
+                chartEl.requestFullscreen();
+                fsBtn.innerHTML = "✕ Exit Fullscreen";
+            } else {
+                document.exitFullscreen();
+                fsBtn.innerHTML = "⛶ Fullscreen";
+            }
+        };
+
+        document.getElementById("chart").style.position = "relative";
+        document.getElementById("chart").appendChild(fsBtn);
+        // const svg = d3.select("#chart")
+        //     .append("svg")
+        //     .attr("width", width)
+        //     .attr("height", height)
+        //     .append("g");
+
         const projection = d3.geoMercator()
             .scale(width / (2.2 * Math.PI))
             .translate([width / 2, height / 1.3]);
         
         const pathGenerator = d3.geoPath().projection(projection);
-        
-        svg.append("rect")
+        // Replace lines 112–124 with this:
+
+        const svgEl = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // const svg = svgEl.append("g");  // this is what paths get drawn into
+
+        const g = svgEl.append("g");
+        const zoom = d3.zoom()
+            .scaleExtent([1, 8])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svgEl.call(zoom);  // zoom goes on the real SVG element
+
+        g.append("rect")
             .attr("width", width)
             .attr("height", height)
             .attr("fill", "#0a1628");
         
         const countries = topojson.feature(world, world.objects.countries);
         
-        svg.selectAll(".country")
+        g.selectAll(".country")
             .data(countries.features)
             .enter()
             .append("path")
@@ -146,15 +335,16 @@ async function loadWorldMap() {
                 d3.select(this).attr("stroke-width", 0.5).attr("stroke", "#1a2a4a");
                 hideTooltip();
             });
-        
-        const graticule = d3.geoGraticule();
-        svg.append("path")
-            .datum(graticule)
-            .attr("class", "graticule")
-            .attr("d", pathGenerator)
-            .attr("fill", "none")
-            .attr("stroke", "#1a2a4a")
-            .attr("stroke-width", 0.3);
+
+        // Grid Lines
+        // const graticule = d3.geoGraticule();
+        // g.append("path")
+        //     .datum(graticule)
+        //     .attr("class", "graticule")
+        //     .attr("d", pathGenerator)
+        //     .attr("fill", "none")
+        //     .attr("stroke", "#1a2a4a")
+        //     .attr("stroke-width", 0.3);
         
         updateThermometer();
         updateArcticMeter();
@@ -371,6 +561,7 @@ function updateInsights() {
 }
 
 function setupEventListeners() {
+    setupLanding();
     d3.selectAll(".scenario-btn").on("click", function() {
         d3.selectAll(".scenario-btn").classed("active", false);
         d3.select(this).classed("active", true);
@@ -430,6 +621,20 @@ function setupEventListeners() {
             }, 200);
             d3.select(this).text("Pause");
         }
+    });
+    document.getElementById("story-mode-btn").addEventListener("click", () => {
+        const panel = document.getElementById("story-panel");
+        const isHidden = panel.style.display === "none" || panel.style.display === "";
+        panel.style.display = isHidden ? "block" : "none";
+        if (isHidden) showStoryStep(0);
+    });
+    
+    document.getElementById("story-prev").addEventListener("click", () => {
+        if (currentStoryStep > 0) showStoryStep(--currentStoryStep);
+    });
+    
+    document.getElementById("story-next").addEventListener("click", () => {
+        if (currentStoryStep < storySteps.length - 1) showStoryStep(++currentStoryStep);
     });
 }
 
