@@ -80,6 +80,7 @@
             </div>
         </div>
         <button class="play-btn" id="play-btn">▶ Play</button>
+        <p class="ssp-note">SSP = Shared Socioeconomic Pathway: each scenario models a different future based on global emission choices, ranging from aggressive climate action (SSP1-2.6) to unchecked fossil fuel growth (SSP5-8.5).</p>
     </div>
 
     <div id="story-panel" style="display:none;" class="story-panel">
@@ -114,17 +115,12 @@
                     </div>
                     <div class="sb-sublabel">Remaining Ice</div>
                 </div>
-                <div class="sb-divider"></div>
-                <div class="sidebar-item">
-                    <div class="sb-label">📊 Warming Stripes</div>
-                    <div id="sidebar-stripes" class="sidebar-stripes"></div>
-                    <div class="sb-sublabel">Each stripe = 5 yrs</div>
-                </div>
             </div>
         </div>
         <p class="viz-note">🌍 Hover over any country to see its temperature anomaly. Countries in red are warming faster.</p>
     </div>
-    <div class="meters-row">
+
+    <!-- <div class="meters-row">
         <div class="meter-card">
             <h3>🌡️ Global Thermometer</h3>
             <div class="thermometer">
@@ -141,15 +137,7 @@
             <div id="ice-percent" class="ice-percent">100%</div>
             <div class="ice-label">Remaining Ice</div>
         </div>
-
-        <div class="meter-card">
-            <h3>📊 Warming Stripes</h3>
-            <div id="stripes-container" class="stripes-container"></div>
-            <div class="stripes-label">Each stripe = 5 years | Cooler → Warmer</div>
-        </div>
-    </div>
-
-    
+    </div> -->
 
     <div class="insights-panel">
         <h3>🔑 Key Insights</h3>
@@ -171,24 +159,6 @@
             Select a scenario and year to explore climate futures...
         </div>
     </div>
-
-    <!-- <div class="takeaway">
-        <h2>💡 The One Thing Everyone Should Learn</h2>
-        <p>The difference between 1.5 degrees Celsius and 4.5 degrees Celsius of warming is not just a number. It is the difference between a livable future and catastrophic heatwaves, sea level rise, and ecosystem collapse. <strong>The Arctic, warming 2 to 3 times faster than the rest of the world, is our early warning system. Your choices today determine which future we get.</strong></p>
-    </div>
-
-    <div class="writeup">
-        <h2>📝 Project Write-Up</h2>
-        
-        <h3>1. What have you done so far?</h3>
-        <p>We have created an interactive world map visualization that displays CMIP6 temperature projections from 2015 to 2100 under three emission scenarios. The current prototype includes an interactive world map where countries are color-coded by temperature anomaly, year slider with play/pause animation, scenario toggle buttons, a dynamic insights panel, a thermometer visualization, an Arctic sea ice meter, warming stripes, and hover tooltips showing country-specific data. The visualization uses real CMIP6 data for the low scenario extracted from Google Cloud's CMIP6 archive and scientifically-informed patterns for medium and high scenarios based on published CMIP6 warming ratios.</p>
-        
-        <h3>2. What will be the most challenging part of your project to design and why?</h3>
-        <p>The most challenging aspect has been implementing the interactive world map that shows regional temperature variations across different countries. The world map requires loading and processing large geospatial data using TopoJSON, projecting coordinates accurately using geographic projections, and creating smooth color transitions for hundreds of countries based on temperature anomalies. Additionally, implementing the hover tooltips that show country-specific data and integrating all the creative elements like the thermometer, ice meter, and warming stripes while keeping everything synchronized with the year slider and scenario buttons required careful state management.</p>
-        
-        <h3>Data Source</h3>
-        <p>CMIP6 from NOAA and Google Cloud Public Dataset. The data includes temperature anomaly projections from 2015 to 2100 for SSP1-2.6, SSP2-4.5, and SSP5-8.5 scenarios. Low scenario data is real CMIP6 data; medium and high scenarios use warming ratios of 1.8x and 3.0x based on CMIP6 multi-model means from the IPCC AR6 report.</p>
-    </div> -->
 
     <footer>
         <p>Data: CMIP6 Climate Model Projections | Built with D3.js | Interactive visualization for climate exploration</p>
