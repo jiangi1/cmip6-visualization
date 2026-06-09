@@ -47,80 +47,208 @@ const regionalMultipliers = {
 };
 const DEFAULT_MULTIPLIER = 1.0;
 
-const storySteps = [
-    {
-        year: 2015,
-        scenario: "ssp245",
-        title: "📍 Where We Are Today",
-        text: "In 2015, the Paris Agreement was signed. Global temperatures are already ~1.2°C above pre-industrial levels. The path we choose from here determines everything."
-    },
-    {
-        year: 2040,
-        scenario: "ssp585",
-        title: "🔥 High Emissions: Early Warning Signs",
-        text: "Under high emissions, the Arctic is warming 3× faster than the global average. Summer sea ice is disappearing. Extreme weather events are becoming the norm."
-    },
-    {
-        year: 2060,
-        scenario: "ssp585",
-        title: "⚠️ The 2°C Threshold Is Crossed",
-        text: "We've passed the critical 2°C threshold. Coral reefs are largely gone, coastal flooding displaces hundreds of millions, and deadly heatwaves strike annually."
-    },
-    {
-        year: 2060,
-        scenario: "ssp126",
-        title: "🌱 Low Emissions: A Different 2060",
-        text: "The same year, under low emissions, warming stays near 1.5°C. Renewable energy dominates. The worst impacts are avoided. Take a look at the map."
-    },
-    {
-        year: 2100,
-        scenario: "ssp585",
-        title: "💀 High Emissions End of Century",
-        text: "4–5°C of warming. Large parts of the tropics are uninhabitable in summer. Sea levels have risen over a meter. This is the world we leave to future generations."
-    },
-    {
-        year: 2100,
-        scenario: "ssp126",
-        title: "✅ Low Emissions End of Century",
-        text: "~1.5°C of warming. A livable planet. The difference between this and the previous step is entirely determined by choices made in the next 10–20 years."
-    }
+// Story step configs: [year, scenario]
+const storyStepConfigs = [
+    [2015, "ssp245"],   // 0: baseline
+    [2015, "ssp245"],   // 1: three paths (no map update needed, shows chart)
+    [2030, "ssp245"],   // 2: early divergence
+    [2040, "ssp585"],   // 3: arctic ice focus
+    [2060, "ssp585"],   // 4: 2°C crossed
+    [2060, "ssp126"],   // 5: low 2060 contrast
+    [2080, "ssp245"],   // 6: regional inequality
+    [2080, "ssp245"],   // 7: thermometer compare
+    [2100, "ssp585"],   // 8: high emissions end
+    [2100, "ssp126"],   // 9: low emissions end
 ];
 
 let currentStoryStep = 0;
+let storyModeActive = false;
 
-function showStoryStep(index) {
-    const step = storySteps[index];
+// ---- Mini-map rendering for story sections ----
+function renderStoryMiniMap(containerId, year, scenario) {
+    const container = document.getElementById(containerId);
+    if (!container || !worldData || !dataLoaded) return;
 
-    currentScenario = step.scenario;
-    currentYear = step.year;
-    currentStoryStep = index;
+    const width = container.clientWidth || 500;
+    const height = container.clientHeight || 280;
 
-    d3.select("#year-slider").property("value", currentYear);
-    d3.select("#year-value").text(currentYear);
-    d3.selectAll(".scenario-btn").classed("active", false);
-    d3.select(`[data-scenario="${currentScenario}"]`).classed("active", true);
+    container.innerHTML = "";
 
-    const scenarioLabel = { ssp126: "🌱 Low Emissions", ssp245: "⚠️ Medium Emissions", ssp585: "🔥 High Emissions" };
-    const scenarioClass = { ssp126: "low", ssp245: "medium", ssp585: "high" };
+    const projection = d3.geoNaturalEarth1()
+        .scale((width / 630) * 100)
+        .translate([width / 2, height / 2]);
 
-    document.getElementById("story-year").textContent = step.year;
-    document.getElementById("story-title").innerHTML = `${step.title} <span class="story-scenario-tag ${scenarioClass[step.scenario]}">${scenarioLabel[step.scenario]}</span>`;
-    document.getElementById("story-text").textContent = step.text;
-    document.getElementById("story-counter").textContent = `${index + 1} / ${storySteps.length}`;
+    const pathGen = d3.geoPath().projection(projection);
 
-    document.getElementById("story-prev").disabled = index === 0;
-    document.getElementById("story-next").disabled = index === storySteps.length - 1;
+    const svg = d3.select(container).append("svg")
+        .attr("width", width).attr("height", height)
+        .style("background", "transparent");
 
-    updateSidebar();
+    // Ocean
+    svg.append("rect").attr("width", width).attr("height", height)
+        .attr("fill", "#0a1a30").attr("rx", 0);
 
-    if (worldData) {
-        recolorMap();
-    } else {
-        loadWorldMap();
-    }
+    const countries = topojson.feature(worldData, worldData.objects.countries);
+    const yearIndex = years.indexOf(year);
 
-    updateInsights();
+    svg.append("g").selectAll("path")
+        .data(countries.features)
+        .enter().append("path")
+        .attr("d", pathGen)
+        .attr("fill", d => {
+            if (yearIndex === -1) return "#1e3a5a";
+            const globalAnom = dataByScenario[scenario][yearIndex];
+            const mult = regionalMultipliers[d.properties.name] || DEFAULT_MULTIPLIER;
+            const anom = globalAnom * mult;
+            if (anom > 5) return "#8e44ad";
+            if (anom > 4) return "#e74c3c";
+            if (anom > 3) return "#f39c12";
+            if (anom > 2) return "#f1c40f";
+            if (anom > 1) return "#93c5fd";
+            return "#2ecc71";
+        })
+        .attr("stroke", "#0a1628").attr("stroke-width", 0.4);
+
+    // Subtle color legend
+    const legendColors = ["#2ecc71","#93c5fd","#f1c40f","#f39c12","#e74c3c","#8e44ad"];
+    const legendLabels = ["<1°","1–2°","2–3°","3–4°","4–5°",">5°"];
+    const lg = svg.append("g").attr("transform", `translate(8, ${height - 20})`);
+    legendColors.forEach((c, i) => {
+        lg.append("rect").attr("x", i * 30).attr("width", 26).attr("height", 7).attr("fill", c).attr("rx", 2);
+        lg.append("text").attr("x", i * 30 + 13).attr("y", 17).attr("text-anchor", "middle")
+            .attr("fill", "#64748b").attr("font-size", "8px").text(legendLabels[i]);
+    });
 }
+
+function renderScenarioChart() {
+    const container = document.getElementById("story-chart-scenarios");
+    if (!container) return;
+    container.innerHTML = `
+        <div class="scenario-chart-row">
+            <div class="scenario-chart-label">
+                <span style="color:#27ae60">🌱 SSP1-2.6 (Low)</span>
+                <span style="color:#27ae60">~1.5°C by 2100</span>
+            </div>
+            <div class="scenario-chart-track">
+                <div class="scenario-chart-fill low" style="width:30%"></div>
+            </div>
+        </div>
+        <div class="scenario-chart-row">
+            <div class="scenario-chart-label">
+                <span style="color:#f39c12">⚠️ SSP2-4.5 (Medium)</span>
+                <span style="color:#f39c12">~2.7°C by 2100</span>
+            </div>
+            <div class="scenario-chart-track">
+                <div class="scenario-chart-fill medium" style="width:54%"></div>
+            </div>
+        </div>
+        <div class="scenario-chart-row">
+            <div class="scenario-chart-label">
+                <span style="color:#e74c3c">🔥 SSP5-8.5 (High)</span>
+                <span style="color:#e74c3c">~4–5°C by 2100</span>
+            </div>
+            <div class="scenario-chart-track">
+                <div class="scenario-chart-fill high" style="width:90%"></div>
+            </div>
+        </div>
+        <p class="scenario-chart-note">Projected global warming above pre-industrial baseline by 2100 · CMIP6</p>
+    `;
+}
+
+function renderStoryVisuals() {
+    if (!worldData || !dataLoaded) return;
+
+    const mapSteps = [
+        { id: "story-map-0",  year: 2015, scenario: "ssp245" },
+        { id: "story-map-2",  year: 2030, scenario: "ssp245" },
+        { id: "story-map-4",  year: 2060, scenario: "ssp585" },
+        { id: "story-map-5",  year: 2060, scenario: "ssp126" },
+        { id: "story-map-6",  year: 2080, scenario: "ssp245" },
+        { id: "story-map-8",  year: 2100, scenario: "ssp585" },
+        { id: "story-map-9",  year: 2100, scenario: "ssp126" },
+    ];
+
+    mapSteps.forEach(s => renderStoryMiniMap(s.id, s.year, s.scenario));
+    renderScenarioChart();
+}
+
+function openStoryOverlay() {
+    const overlay = document.getElementById("story-overlay");
+    overlay.style.display = "flex";
+    overlay.classList.add("visible");
+    storyModeActive = true;
+
+    // Show step nav
+    document.querySelector(".story-step-nav").style.display = "flex";
+
+    // Render visuals after layout
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            renderStoryVisuals();
+            setupStoryScroll();
+            revealSection(0);
+        }, 100);
+    });
+
+    document.body.style.overflow = "hidden";
+}
+
+function closeStoryOverlay() {
+    const overlay = document.getElementById("story-overlay");
+    overlay.style.display = "none";
+    overlay.classList.remove("visible");
+    storyModeActive = false;
+    document.body.style.overflow = "";
+    document.querySelector(".story-step-nav").style.display = "none";
+}
+
+function revealSection(index) {
+    const sections = document.querySelectorAll(".story-section");
+    sections.forEach((s, i) => {
+        if (i <= index) s.classList.add("revealed");
+    });
+    updateStoryProgress(index);
+    updateStepDots(index);
+}
+
+function updateStoryProgress(stepIndex) {
+    const pct = ((stepIndex + 1) / 10) * 100;
+    document.getElementById("story-progress-fill").style.width = pct + "%";
+    document.getElementById("story-progress-label").textContent = `Step ${stepIndex + 1} of 10`;
+}
+
+function updateStepDots(activeIndex) {
+    document.querySelectorAll(".story-step-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === activeIndex);
+    });
+}
+
+function setupStoryScroll() {
+    const container = document.getElementById("story-scroll-container");
+    const sections = document.querySelectorAll(".story-section");
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const step = parseInt(entry.target.dataset.step);
+                revealSection(step);
+            }
+        });
+    }, { root: container, threshold: 0.3 });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Step dot click
+    document.querySelectorAll(".story-step-dot").forEach(dot => {
+        dot.addEventListener("click", () => {
+            const step = parseInt(dot.dataset.step);
+            sections[step].scrollIntoView({ behavior: "smooth" });
+        });
+    });
+}
+
+// Legacy stub so old event listener refs don't break
+function showStoryStep(index) { /* replaced by scrollable story */ }
 
 function recolorMap() {
     d3.selectAll(".country")
@@ -226,12 +354,7 @@ function setupLanding() {
     document.getElementById("landing-story").addEventListener("click", () => {
         dismissLanding();
         setTimeout(() => {
-            document.getElementById("story-panel").style.display = "block";
-            document.getElementById("story-mode-btn").textContent = "✕ Exit Story Mode";
-            document.querySelector(".insights-panel").style.display = "none";
-            currentStoryStep = 0;
-            showStoryStep(0);
-            document.getElementById("story-panel").scrollIntoView({ behavior: "smooth" });
+            openStoryOverlay();
         }, 800);
     });
 
@@ -327,6 +450,7 @@ async function loadWorldMap() {
 
         updateSidebar();
         updateInsights();
+        if (storyModeActive) renderStoryVisuals();
 
     } catch (error) {
         console.error("Error loading map:", error);
@@ -487,26 +611,18 @@ function setupEventListeners() {
     });
 
     document.getElementById("story-mode-btn").addEventListener("click", () => {
-        const panel = document.getElementById("story-panel");
-        const isHidden = panel.style.display === "none" || panel.style.display === "";
-        panel.style.display = isHidden ? "block" : "none";
-        document.getElementById("story-mode-btn").textContent = isHidden ? "✕ Exit Story Mode" : "📖 Story Mode";
-        document.querySelector(".insights-panel").style.display = isHidden ? "none" : "block";
-        if (isHidden) {
-            currentStoryStep = 0;
-            showStoryStep(0);
-        } else {
-            setTimeout(() => loadWorldMap(), 520);
+        openStoryOverlay();
+    });
+
+    document.getElementById("story-exit-btn").addEventListener("click", () => {
+        closeStoryOverlay();
+    });
+
+    document.getElementById("story-explore-cta").addEventListener("click", () => {
+        closeStoryOverlay();
+        setTimeout(() => {
             document.querySelector(".controls").scrollIntoView({ behavior: "smooth" });
-        }
-    });
-
-    document.getElementById("story-prev").addEventListener("click", () => {
-        if (currentStoryStep > 0) showStoryStep(--currentStoryStep);
-    });
-
-    document.getElementById("story-next").addEventListener("click", () => {
-        if (currentStoryStep < storySteps.length - 1) showStoryStep(++currentStoryStep);
+        }, 200);
     });
 }
 

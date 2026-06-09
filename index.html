@@ -83,16 +83,309 @@
         <p class="ssp-note">SSP = Shared Socioeconomic Pathway: each scenario models a different future based on global emission choices, ranging from aggressive climate action (SSP1-2.6) to unchecked fossil fuel growth (SSP5-8.5).</p>
     </div>
 
-    <div id="story-panel" style="display:none;" class="story-panel">
-        <div id="story-year" class="story-year-badge">2015</div>
-        <div id="story-title" class="story-panel-title"></div>
-        <div id="story-text" class="story-panel-text"></div>
-        <div class="story-panel-nav">
-            <button id="story-prev" class="story-nav-btn">← Prev</button>
-            <span id="story-counter" class="story-counter">1 / 6</span>
-            <button id="story-next" class="story-nav-btn">Next →</button>
+    <!-- SCROLLABLE STORY MODE OVERLAY -->
+    <div id="story-overlay" class="story-overlay" style="display:none;">
+        <div class="story-overlay-header">
+            <div class="story-overlay-logo">🌍 Warming Planet</div>
+            <div class="story-overlay-progress">
+                <div class="story-progress-bar">
+                    <div class="story-progress-fill" id="story-progress-fill"></div>
+                </div>
+                <span class="story-progress-label" id="story-progress-label">Step 1 of 10</span>
+            </div>
+            <button class="story-exit-btn" id="story-exit-btn">✕ Exit Story</button>
         </div>
-    </div>
+
+        <div class="story-scroll-container" id="story-scroll-container">
+
+            <!-- Step 1: Baseline 2015 -->
+            <div class="story-section" data-step="0">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">📍 Step 1 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(100,181,246,0.15); color:#64b5f6;">2015 · All Scenarios</div>
+                        <h2 class="story-section-title">Where We Stand Today</h2>
+                        <p class="story-section-body">In 2015, the world signed the Paris Agreement. Global temperatures had already risen roughly 1°C above pre-industrial levels, with the warming signal unmistakable in every region. Scientists were now certain: the planet would keep warming — but <em>how much</em> depended entirely on future choices.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">🌡️ <strong>+1.0°C</strong> above pre-industrial in 2015</div>
+                            <div class="story-fact">📜 Paris Agreement target: limit warming to 1.5–2°C</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ Global Temperature Anomaly — 2015</div>
+                            <div class="story-map-clone" id="story-map-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Three Paths -->
+            <div class="story-section story-section-alt" data-step="1">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🛤️ Step 2 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(100,181,246,0.12); color:#94a3b8;">2015 · The Fork in the Road</div>
+                        <h2 class="story-section-title">Three Futures, One Decision</h2>
+                        <p class="story-section-body">CMIP6 models three distinct emission pathways. SSP1-2.6 imagines a world that rapidly decarbonizes, keeping warming close to 1.5°C. SSP2-4.5 follows current policy trends toward roughly 2.7°C. SSP5-8.5 assumes fossil fuel growth continues unchecked — a worst-case 4–5°C world by 2100.</p>
+                        <div class="story-scenario-compare">
+                            <div class="story-ssp-pill low">🌱 SSP1-2.6 — ~1.5°C by 2100</div>
+                            <div class="story-ssp-pill medium">⚠️ SSP2-4.5 — ~2.7°C by 2100</div>
+                            <div class="story-ssp-pill high">🔥 SSP5-8.5 — ~4–5°C by 2100</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="scenarios">
+                            <div class="story-viz-label">📊 Emission Pathways Compared</div>
+                            <div class="story-chart-embed" id="story-chart-scenarios"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: 2030 Medium -->
+            <div class="story-section" data-step="2">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🌡️ Step 3 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(243,156,18,0.15); color:#f39c12;">2030 · SSP2-4.5 Medium</div>
+                        <h2 class="story-section-title">The 2030s: Early Divergence</h2>
+                        <p class="story-section-body">By 2030, all three scenarios still look similar — greenhouse gas inertia means early differences are small. But the Arctic is already responding faster than the rest of the planet, warming roughly 2–3× the global average. CMIP6 models consistently show polar amplification beginning well before mid-century.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">❄️ Arctic warming <strong>2–3×</strong> faster than global mean</div>
+                            <div class="story-fact">🌊 Sea level rise already locked in from past emissions</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2030 · Medium Emissions (SSP2-4.5)</div>
+                            <div class="story-map-clone" id="story-map-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Arctic ice highlight -->
+            <div class="story-section story-section-alt" data-step="3">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">❄️ Step 4 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(137,207,240,0.15); color:#89CFF0;">2040 · SSP5-8.5 High</div>
+                        <h2 class="story-section-title">The Arctic in Crisis</h2>
+                        <p class="story-section-body">Under high emissions (SSP5-8.5), CMIP6 models project the Arctic Ocean could see its first ice-free September as early as the late 2040s. The loss of sea ice triggers a feedback: dark ocean water absorbs more sunlight than reflective ice, accelerating warming further. This is polar amplification in action.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">❄️ SSP5-8.5: ice-free Arctic September by late 2040s</div>
+                            <div class="story-fact">🌊 SSP1-2.6: ice loss limited to ~65% in September</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame story-viz-highlight-ice" data-highlight="ice">
+                            <div class="story-viz-label">❄️ Arctic Sea Ice Remaining</div>
+                            <div class="story-ice-display" id="story-ice-display">
+                                <div class="big-ice-ring" id="story-big-ice-ring">
+                                    <svg viewBox="0 0 200 200" class="ice-ring-svg">
+                                        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(137,207,240,0.15)" stroke-width="18"/>
+                                        <circle cx="100" cy="100" r="80" fill="none" stroke="#89CFF0" stroke-width="18"
+                                            stroke-dasharray="502" stroke-dashoffset="151"
+                                            stroke-linecap="round" transform="rotate(-90 100 100)"
+                                            id="story-ice-ring-fill"/>
+                                    </svg>
+                                    <div class="ice-ring-label">
+                                        <div class="ice-ring-pct" id="story-ice-pct">70%</div>
+                                        <div class="ice-ring-sub">Ice Remaining</div>
+                                    </div>
+                                </div>
+                                <div class="ice-scenario-bars">
+                                    <div class="ice-bar-row">
+                                        <span class="ice-bar-label">SSP1-2.6</span>
+                                        <div class="ice-bar-track"><div class="ice-bar-fill low" style="width:85%"></div></div>
+                                        <span class="ice-bar-val">85%</span>
+                                    </div>
+                                    <div class="ice-bar-row">
+                                        <span class="ice-bar-label">SSP2-4.5</span>
+                                        <div class="ice-bar-track"><div class="ice-bar-fill medium" style="width:72%"></div></div>
+                                        <span class="ice-bar-val">72%</span>
+                                    </div>
+                                    <div class="ice-bar-row">
+                                        <span class="ice-bar-label">SSP5-8.5</span>
+                                        <div class="ice-bar-track"><div class="ice-bar-fill high" style="width:55%"></div></div>
+                                        <span class="ice-bar-val">55%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: 2060 High emissions crosses 2°C -->
+            <div class="story-section" data-step="4">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">⚠️ Step 5 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(231,76,60,0.15); color:#e74c3c;">2060 · SSP5-8.5 High</div>
+                        <h2 class="story-section-title">Crossing 2°C — A Critical Threshold</h2>
+                        <p class="story-section-body">Under high emissions, CMIP6 models project the global mean temperature crossing 2°C above pre-industrial levels around mid-century. This is the upper guardrail of the Paris Agreement. Beyond it, IPCC assessments find substantially higher risks: more extreme heat events, disrupted monsoons, and accelerating sea level rise.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">🌡️ SSP5-8.5 crosses 2°C around 2040–2050</div>
+                            <div class="story-fact">🌊 Every 0.5°C matters: risk increases non-linearly</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2060 · High Emissions (SSP5-8.5)</div>
+                            <div class="story-map-clone" id="story-map-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: 2060 Low emissions contrast -->
+            <div class="story-section story-section-alt" data-step="5">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🌱 Step 6 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(39,174,96,0.15); color:#27ae60;">2060 · SSP1-2.6 Low</div>
+                        <h2 class="story-section-title">The Same Year — A Different World</h2>
+                        <p class="story-section-body">In the same year 2060, the low-emissions pathway shows a dramatically different picture. Under SSP1-2.6, global warming stabilizes near 1.5°C as CO2 emissions approach net zero. Compare the map to the previous step — the color difference tells the story of what human choices can prevent.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">✅ SSP1-2.6 requires global net zero CO₂ by ~2075</div>
+                            <div class="story-fact">🌱 Renewable energy must scale to ~70–85% of power by 2050</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2060 · Low Emissions (SSP1-2.6)</div>
+                            <div class="story-map-clone" id="story-map-5"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Regional spotlight -->
+            <div class="story-section" data-step="6">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🗺️ Step 7 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(243,156,18,0.15); color:#f39c12;">2080 · SSP2-4.5 Medium</div>
+                        <h2 class="story-section-title">Uneven Warming: Who Bears the Burden?</h2>
+                        <p class="story-section-body">CMIP6 shows warming is deeply unequal. High-latitude regions like Canada, Russia, and Scandinavia warm 1.5–2× the global average. Meanwhile, tropical and equatorial regions — home to billions of people with fewer resources to adapt — face longer, more intense heat seasons and disrupted rainfall patterns.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">🧊 Russia &amp; Canada: up to <strong>1.8–2×</strong> global warming rate</div>
+                            <div class="story-fact">☀️ Tropical regions face prolonged heat seasons</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2080 · Regional Warming Differences</div>
+                            <div class="story-map-clone" id="story-map-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: Thermometer focus -->
+            <div class="story-section story-section-alt" data-step="7">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🌡️ Step 8 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(231,76,60,0.15); color:#e74c3c;">2080 · All Three Scenarios</div>
+                        <h2 class="story-section-title">The Gap Between Scenarios Widens</h2>
+                        <p class="story-section-body">By 2080, the three pathways diverge sharply. Under low emissions, warming has stabilized. Under high emissions, every decade adds another ~0.3–0.4°C. The thermometer is a stark illustration: a fraction of a degree doesn't sound like much, but it means millions more people exposed to deadly heat.</p>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame story-viz-highlight-temp" data-highlight="thermometer">
+                            <div class="story-viz-label">🌡️ Global Temperature — 2080</div>
+                            <div class="story-thermo-compare" id="story-thermo-compare">
+                                <div class="thermo-group">
+                                    <div class="thermo-label">SSP1-2.6</div>
+                                    <div class="thermo-tube">
+                                        <div class="thermo-fill low" id="tc-low" style="height:28%"></div>
+                                    </div>
+                                    <div class="thermo-val low-text" id="tc-low-val">1.4°C</div>
+                                </div>
+                                <div class="thermo-group">
+                                    <div class="thermo-label">SSP2-4.5</div>
+                                    <div class="thermo-tube">
+                                        <div class="thermo-fill medium" id="tc-med" style="height:52%"></div>
+                                    </div>
+                                    <div class="thermo-val medium-text" id="tc-med-val">2.5°C</div>
+                                </div>
+                                <div class="thermo-group">
+                                    <div class="thermo-label">SSP5-8.5</div>
+                                    <div class="thermo-tube">
+                                        <div class="thermo-fill high" id="tc-high" style="height:78%"></div>
+                                    </div>
+                                    <div class="thermo-val high-text" id="tc-high-val">3.8°C</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 9: 2100 High emissions catastrophe -->
+            <div class="story-section" data-step="8">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">🔥 Step 9 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(231,76,60,0.2); color:#e74c3c;">2100 · SSP5-8.5 High</div>
+                        <h2 class="story-section-title">End of Century: The High-Emissions World</h2>
+                        <p class="story-section-body">Under unchecked fossil fuel growth, CMIP6 projects 4–5°C of global warming by 2100. Sea levels could rise over a meter. Arctic summers become ice-free for five months of the year. Large portions of the tropics experience conditions dangerous for outdoor labor. This is the world we leave if emissions are not reduced.</p>
+                        <div class="story-fact-box">
+                            <div class="story-fact">🌊 Sea level rise: up to 1m+ projected under SSP5-8.5</div>
+                            <div class="story-fact">❄️ Arctic ice-free for 5 months per year by 2100</div>
+                        </div>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2100 · High Emissions Worst Case</div>
+                            <div class="story-map-clone" id="story-map-8"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 10: 2100 Low emissions hope -->
+            <div class="story-section story-section-final" data-step="9">
+                <div class="story-section-inner">
+                    <div class="story-text-col">
+                        <div class="story-step-tag">✅ Step 10 of 10</div>
+                        <div class="story-date-chip" style="background: rgba(39,174,96,0.2); color:#27ae60;">2100 · SSP1-2.6 Low</div>
+                        <h2 class="story-section-title">End of Century: The Livable World</h2>
+                        <p class="story-section-body">Under low emissions, the world of 2100 is recognizable — still warming, but at ~1.5°C above pre-industrial. The most catastrophic tipping points are avoided. The difference between this map and the previous one is not inevitable — it is entirely determined by choices made in the next 10–20 years. Now explore it yourself.</p>
+                        <div class="story-fact-box success">
+                            <div class="story-fact">🌱 ~1.5°C warming — Paris Agreement goal achievable</div>
+                            <div class="story-fact">❄️ Arctic sea ice persists year-round under SSP1-2.6</div>
+                        </div>
+                        <button class="story-explore-btn" id="story-explore-cta">🔍 Explore the Map Yourself →</button>
+                    </div>
+                    <div class="story-viz-col">
+                        <div class="story-viz-frame" data-highlight="map">
+                            <div class="story-viz-label">🗺️ 2100 · Low Emissions Best Case</div>
+                            <div class="story-map-clone" id="story-map-9"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end story-scroll-container -->
+
+        <!-- Sticky step nav dots on the right -->
+        <div class="story-step-nav">
+            <div class="story-step-dot active" data-step="0" title="Step 1: Where We Stand"></div>
+            <div class="story-step-dot" data-step="1" title="Step 2: Three Futures"></div>
+            <div class="story-step-dot" data-step="2" title="Step 3: Early Divergence"></div>
+            <div class="story-step-dot" data-step="3" title="Step 4: Arctic in Crisis"></div>
+            <div class="story-step-dot" data-step="4" title="Step 5: 2°C Threshold"></div>
+            <div class="story-step-dot" data-step="5" title="Step 6: Low Emissions 2060"></div>
+            <div class="story-step-dot" data-step="6" title="Step 7: Uneven Warming"></div>
+            <div class="story-step-dot" data-step="7" title="Step 8: Diverging Paths"></div>
+            <div class="story-step-dot" data-step="8" title="Step 9: High Emissions 2100"></div>
+            <div class="story-step-dot" data-step="9" title="Step 10: Low Emissions 2100"></div>
+        </div>
+
+    </div><!-- end story-overlay -->
 
     <div class="map-container">
         <h3>🗺️ Global Temperature Anomaly Map</h3>
