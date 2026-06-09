@@ -65,6 +65,15 @@ let currentStoryStep = 0;
 let storyModeActive = false;
 
 // ---- Mini-map rendering for story sections ----
+function getAnomalyColor(anom) {
+    if (anom > 5) return "#8e44ad";
+    if (anom > 4) return "#e74c3c";
+    if (anom > 3) return "#f39c12";
+    if (anom > 2) return "#f1c40f";
+    if (anom > 1) return "#93c5fd";
+    return "#2ecc71";
+}
+
 function renderStoryMiniMap(containerId, year, scenario) {
     const container = document.getElementById(containerId);
     if (!container || !worldData || !dataLoaded) return;
@@ -99,13 +108,7 @@ function renderStoryMiniMap(containerId, year, scenario) {
             if (yearIndex === -1) return "#1e3a5a";
             const globalAnom = dataByScenario[scenario][yearIndex];
             const mult = regionalMultipliers[d.properties.name] || DEFAULT_MULTIPLIER;
-            const anom = globalAnom * mult;
-            if (anom > 5) return "#8e44ad";
-            if (anom > 4) return "#e74c3c";
-            if (anom > 3) return "#f39c12";
-            if (anom > 2) return "#f1c40f";
-            if (anom > 1) return "#93c5fd";
-            return "#2ecc71";
+            return getAnomalyColor(globalAnom * mult);
         })
         .attr("stroke", "#0a1628").attr("stroke-width", 0.4);
 
@@ -118,6 +121,116 @@ function renderStoryMiniMap(containerId, year, scenario) {
         lg.append("text").attr("x", i * 30 + 13).attr("y", 17).attr("text-anchor", "middle")
             .attr("fill", "#64748b").attr("font-size", "8px").text(legendLabels[i]);
     });
+
+    // Click to expand
+    container.addEventListener("click", () => openMapModal(containerId, year, scenario));
+}
+
+// ---- Full-screen interactive map modal ----
+function openMapModal(sourceId, year, scenario) {
+    const modal = document.getElementById("map-modal");
+    const body = document.getElementById("map-modal-body");
+    const title = document.getElementById("map-modal-title");
+
+    // Get label from the viz-label sibling element
+    const container = document.getElementById(sourceId);
+    const vizLabel = container ? container.closest(".story-viz-frame")?.querySelector(".story-viz-label") : null;
+    title.textContent = vizLabel ? vizLabel.textContent : `🗺️ ${year} · ${scenario.toUpperCase()}`;
+
+    body.innerHTML = "";
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => renderModalMap(body, year, scenario));
+}
+
+function renderModalMap(container, year, scenario) {
+    const width = container.clientWidth || 900;
+    const height = container.clientHeight || 560;
+
+    const projection = d3.geoNaturalEarth1()
+        .scale((width / 630) * 100)
+        .translate([width / 2, height / 2]);
+
+    const pathGen = d3.geoPath().projection(projection);
+
+    const svg = d3.select(container).append("svg")
+        .attr("width", width).attr("height", height);
+
+    const g = svg.append("g");
+
+    // Ocean bg
+    g.append("rect").attr("width", width).attr("height", height)
+        .attr("fill", "#0a1a30");
+
+    const countries = topojson.feature(worldData, worldData.objects.countries);
+    const yearIndex = years.indexOf(year);
+
+    const tooltip = document.getElementById("modal-tooltip");
+
+    g.selectAll("path")
+        .data(countries.features)
+        .enter().append("path")
+        .attr("d", pathGen)
+        .attr("fill", d => {
+            if (yearIndex === -1) return "#1e3a5a";
+            const globalAnom = dataByScenario[scenario][yearIndex];
+            const mult = regionalMultipliers[d.properties.name] || DEFAULT_MULTIPLIER;
+            return getAnomalyColor(globalAnom * mult);
+        })
+        .attr("stroke", "#0a1628")
+        .attr("stroke-width", 0.5)
+        .attr("cursor", "pointer")
+        .on("mousemove", function(event, d) {
+            d3.select(this).attr("stroke", "#64b5f6").attr("stroke-width", 2);
+            if (yearIndex === -1) return;
+            const globalAnom = dataByScenario[scenario][yearIndex];
+            const mult = regionalMultipliers[d.properties.name] || DEFAULT_MULTIPLIER;
+            const anom = globalAnom * mult;
+            const color = getAnomalyColor(anom);
+            tooltip.style.display = "block";
+            tooltip.style.left = (event.clientX + 16) + "px";
+            tooltip.style.top  = (event.clientY - 20) + "px";
+            tooltip.style.border = `2px solid ${color}`;
+            tooltip.innerHTML = `
+                <strong style="color:#e2e8f0">${d.properties.name}</strong><br>
+                <span style="color:#94a3b8">Temperature Anomaly:</span> <span style="color:${color};font-weight:700">${anom.toFixed(2)}°C</span><br>
+                <span style="color:#94a3b8">Scenario:</span> <span style="color:#cbd5e1">${scenarioNames[scenario]}</span><br>
+                <span style="color:#94a3b8">Year:</span> <span style="color:#cbd5e1">${year}</span>
+            `;
+        })
+        .on("mouseleave", function() {
+            d3.select(this).attr("stroke", "#0a1628").attr("stroke-width", 0.5);
+            tooltip.style.display = "none";
+        });
+
+    // Legend
+    const legendColors = ["#2ecc71","#93c5fd","#f1c40f","#f39c12","#e74c3c","#8e44ad"];
+    const legendLabels = ["<1°","1–2°","2–3°","3–4°","4–5°",">5°"];
+    const lg = svg.append("g").attr("transform", `translate(16, ${height - 24})`);
+    legendColors.forEach((c, i) => {
+        lg.append("rect").attr("x", i * 38).attr("width", 34).attr("height", 8).attr("fill", c).attr("rx", 2);
+        lg.append("text").attr("x", i * 38 + 17).attr("y", 20).attr("text-anchor", "middle")
+            .attr("fill", "#64748b").attr("font-size", "9px").text(legendLabels[i]);
+    });
+
+    // Zoom
+    const zoom = d3.zoom()
+        .scaleExtent([0.8, 10])
+        .on("zoom", (event) => g.attr("transform", event.transform));
+
+    svg.call(zoom);
+
+    // Touch pinch-zoom support is handled natively by D3 zoom
+}
+
+function closeMapModal() {
+    const modal = document.getElementById("map-modal");
+    modal.style.display = "none";
+    document.getElementById("modal-tooltip").style.display = "none";
+    document.getElementById("map-modal-body").innerHTML = "";
+    // Only restore scroll if story overlay is also closed
+    if (!storyModeActive) document.body.style.overflow = "";
 }
 
 function renderScenarioChart() {
@@ -623,6 +736,16 @@ function setupEventListeners() {
         setTimeout(() => {
             document.querySelector(".controls").scrollIntoView({ behavior: "smooth" });
         }, 200);
+    });
+
+    // Map modal close
+    document.getElementById("map-modal-close").addEventListener("click", closeMapModal);
+    document.getElementById("map-modal-backdrop").addEventListener("click", closeMapModal);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const modal = document.getElementById("map-modal");
+            if (modal.style.display !== "none") closeMapModal();
+        }
     });
 }
 

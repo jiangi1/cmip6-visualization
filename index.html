@@ -458,6 +458,21 @@
     </footer>
 </div>
 
+<!-- MAP EXPAND MODAL -->
+<div id="map-modal" class="map-modal" style="display:none;">
+    <div class="map-modal-backdrop" id="map-modal-backdrop"></div>
+    <div class="map-modal-content">
+        <div class="map-modal-header">
+            <div class="map-modal-title" id="map-modal-title">🗺️ Map</div>
+            <div class="map-modal-hint">Pinch or scroll to zoom · Drag to pan · Hover for details</div>
+            <button class="map-modal-close" id="map-modal-close">✕</button>
+        </div>
+        <div class="map-modal-body" id="map-modal-body"></div>
+    </div>
+    <!-- tooltip lives here at modal level -->
+    <div class="modal-tooltip" id="modal-tooltip" style="display:none;"></div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
