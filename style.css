@@ -1724,6 +1724,182 @@ footer {
     opacity: 1;
 }
 
+/* ===== WEATHER BACKGROUND CANVAS ===== */
+#weather-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 1;
+}
+
+/* Ensure story content sits above the canvas */
+.story-overlay-header,
+.story-scroll-container,
+.story-step-nav {
+    position: relative;
+    z-index: 2;
+}
+
+/* Per-step background gradient transitions */
+.story-overlay {
+    transition: background 2s ease;
+}
+
+/* Step mood gradients — JS swaps these classes on .story-overlay */
+.wx-mood-baseline {
+    background: radial-gradient(ellipse at 50% 80%, #0d2035 0%, #060e1a 100%);
+}
+.wx-mood-cool {
+    background: radial-gradient(ellipse at 50% 100%, #0a1e35 0%, #040c18 100%);
+}
+.wx-mood-arctic {
+    background: radial-gradient(ellipse at 50% 0%, #0c2233 0%, #050f1e 100%);
+}
+.wx-mood-warm {
+    background: radial-gradient(ellipse at 50% 100%, #2a0c05 0%, #0f060a 100%);
+}
+.wx-mood-hot {
+    background: radial-gradient(ellipse at 50% 100%, #3d0e04 0%, #120408 100%);
+}
+.wx-mood-inferno {
+    background: radial-gradient(ellipse at 50% 100%, #5a1200 0%, #1a0308 100%);
+}
+.wx-mood-hope {
+    background: radial-gradient(ellipse at 40% 80%, #041a0c 0%, #060e1a 100%);
+}
+
+/* ===== CINEMATIC ENHANCEMENTS ===== */
+
+/* Milestone flash overlay */
+.story-milestone-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.08s ease;
+}
+.story-milestone-flash.firing {
+    opacity: 0.18;
+    transition: opacity 0.08s ease;
+}
+.story-milestone-flash.fading {
+    opacity: 0;
+    transition: opacity 0.7s ease;
+}
+
+/* Per-section ambient glow bleeds into background */
+.story-section {
+    transition: background 0.9s ease, opacity 0.7s ease, transform 0.7s ease;
+}
+.story-section[data-step="4"] { background: rgba(231,76,60,0.04); }
+.story-section[data-step="8"] { background: rgba(142,68,173,0.05); }
+.story-section[data-step="9"] { background: linear-gradient(135deg, rgba(39,174,96,0.07), transparent 60%); }
+
+/* Progress bar glow pulse on step change */
+@keyframes progressPulse {
+    0%   { box-shadow: 0 0 0px rgba(100,181,246,0); }
+    40%  { box-shadow: 0 0 14px rgba(100,181,246,0.7); }
+    100% { box-shadow: 0 0 0px rgba(100,181,246,0); }
+}
+.story-progress-fill.pulse {
+    animation: progressPulse 0.9s ease forwards;
+}
+
+/* Scroll vignette: shadow at top+bottom of scroll container */
+.story-scroll-container {
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+    );
+}
+
+/* Viz frame parallax hint — JS nudges transform, CSS eases it */
+.story-viz-frame {
+    will-change: transform;
+    transition: opacity 0.75s ease, transform 0.75s ease, border-color 0.3s;
+}
+
+/* Date chip pulse when a section reveals */
+@keyframes chipPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.07); }
+    100% { transform: scale(1); }
+}
+.story-section.revealed .story-date-chip {
+    animation: chipPop 0.45s ease 0.2s both;
+}
+
+/* Fact box: slide up with a spring */
+@keyframes factSlideUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.story-section.revealed .story-fact-box {
+    animation: factSlideUp 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.45s both;
+}
+.story-section.revealed .story-scenario-compare {
+    animation: factSlideUp 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;
+}
+
+/* Viz frame: scale-up spring on reveal */
+@keyframes vizReveal {
+    from { opacity: 0; transform: translateY(24px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.story-section.revealed .story-viz-frame {
+    animation: vizReveal 0.7s cubic-bezier(0.34,1.2,0.64,1) 0.05s both;
+}
+
+/* Section title: character fade-in feel via letter spacing collapse */
+@keyframes titleReveal {
+    from { opacity: 0; letter-spacing: 0.06em; transform: translateY(14px); }
+    to   { opacity: 1; letter-spacing: -0.02em; transform: translateY(0); }
+}
+.story-section.revealed .story-section-title {
+    animation: titleReveal 0.65s cubic-bezier(0.22,1,0.36,1) 0.25s both;
+}
+
+/* Override the plain opacity transitions on children — let animations handle them */
+.story-section.revealed .story-step-tag,
+.story-section.revealed .story-date-chip,
+.story-section.revealed .story-section-title,
+.story-section.revealed .story-section-body,
+.story-section.revealed .story-fact-box,
+.story-section.revealed .story-scenario-compare,
+.story-section.revealed .story-explore-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Scenario pill entrance stagger */
+.story-section.revealed .story-ssp-pill:nth-child(1) { animation: factSlideUp 0.5s cubic-bezier(0.34,1.4,0.64,1) 0.45s both; }
+.story-section.revealed .story-ssp-pill:nth-child(2) { animation: factSlideUp 0.5s cubic-bezier(0.34,1.4,0.64,1) 0.55s both; }
+.story-section.revealed .story-ssp-pill:nth-child(3) { animation: factSlideUp 0.5s cubic-bezier(0.34,1.4,0.64,1) 0.65s both; }
+
+/* Explore CTA: glow pulse after reveal */
+@keyframes ctaGlow {
+    0%,100% { box-shadow: 0 0 0 rgba(39,174,96,0); }
+    50%      { box-shadow: 0 0 28px rgba(39,174,96,0.5); }
+}
+.story-section.revealed .story-explore-btn {
+    animation: factSlideUp 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.6s both,
+               ctaGlow 2.5s ease 1.2s infinite;
+}
+
 /* Legend inside modal */
 .modal-legend {
     position: absolute;
@@ -1751,4 +1927,94 @@ footer {
 .modal-legend-label {
     font-size: 8px;
     color: #64748b;
+}
+
+/* ===== CINEMATIC STORY TRANSITIONS ===== */
+
+/* Sticky viz column — stays in place while text scrolls past */
+/* .story-viz-col {
+    position: sticky;
+    top: 50%;
+    transform: translateY(-50%);
+    align-self: flex-start;
+    height: fit-content;
+} */
+
+/* Each section needs enough height for the sticky effect to breathe */
+.story-section {
+    min-height: 100vh;
+    align-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+/* Viz frames cross-fade: start invisible/shifted */
+.story-viz-frame {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    transition: opacity 0.75s ease, transform 0.75s ease;
+}
+
+/* Triggered by JS when section is in view */
+.story-section.revealed .story-viz-frame {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Outgoing viz fades down when section leaves upward */
+.story-section.exiting .story-viz-frame {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.97);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Text column entrance — slides in from left */
+.story-text-col {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
+}
+
+.story-section.revealed .story-text-col {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.story-section.exiting .story-text-col {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Stagger child elements inside text col for a cascade effect */
+.story-section.revealed .story-step-tag    { transition-delay: 0.05s; }
+.story-section.revealed .story-date-chip   { transition-delay: 0.15s; }
+.story-section.revealed .story-section-title { transition-delay: 0.25s; }
+.story-section.revealed .story-section-body  { transition-delay: 0.35s; }
+.story-section.revealed .story-fact-box,
+.story-section.revealed .story-scenario-compare,
+.story-section.revealed .story-explore-btn   { transition-delay: 0.45s; }
+
+/* Each text child needs its own transition to respect the delay */
+.story-step-tag,
+.story-date-chip,
+.story-section-title,
+.story-section-body,
+.story-fact-box,
+.story-scenario-compare,
+.story-explore-btn {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.story-section.revealed .story-step-tag,
+.story-section.revealed .story-date-chip,
+.story-section.revealed .story-section-title,
+.story-section.revealed .story-section-body,
+.story-section.revealed .story-fact-box,
+.story-section.revealed .story-scenario-compare,
+.story-section.revealed .story-explore-btn {
+    opacity: 1;
+    transform: translateY(0);
 }

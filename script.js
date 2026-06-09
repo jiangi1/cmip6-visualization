@@ -268,38 +268,109 @@ function renderScenarioChart() {
     `;
 }
 
+// Map config for each step — step index → { containerId, year, scenario }
+// Steps without a map (1=chart, 3=ice, 7=thermometer) are null
+const STORY_MAP_CONFIGS = {
+    0: { id: "story-map-0", year: 2015, scenario: "ssp245" },
+    1: null, // scenario chart
+    2: { id: "story-map-2", year: 2030, scenario: "ssp245" },
+    3: null, // arctic ice display
+    4: { id: "story-map-4", year: 2060, scenario: "ssp585" },
+    5: { id: "story-map-5", year: 2060, scenario: "ssp126" },
+    6: { id: "story-map-6", year: 2080, scenario: "ssp245" },
+    7: null, // thermometer compare
+    8: { id: "story-map-8", year: 2100, scenario: "ssp585" },
+    9: { id: "story-map-9", year: 2100, scenario: "ssp126" },
+};
+
 function renderStoryVisuals() {
     if (!worldData || !dataLoaded) return;
-
-    const mapSteps = [
-        { id: "story-map-0",  year: 2015, scenario: "ssp245" },
-        { id: "story-map-2",  year: 2030, scenario: "ssp245" },
-        { id: "story-map-4",  year: 2060, scenario: "ssp585" },
-        { id: "story-map-5",  year: 2060, scenario: "ssp126" },
-        { id: "story-map-6",  year: 2080, scenario: "ssp245" },
-        { id: "story-map-8",  year: 2100, scenario: "ssp585" },
-        { id: "story-map-9",  year: 2100, scenario: "ssp126" },
-    ];
-
-    mapSteps.forEach(s => renderStoryMiniMap(s.id, s.year, s.scenario));
+    // Render all maps upfront so they're ready when scrolled to
+    Object.values(STORY_MAP_CONFIGS).forEach(cfg => {
+        if (cfg) renderStoryMiniMap(cfg.id, cfg.year, cfg.scenario);
+    });
     renderScenarioChart();
 }
 
+function renderMapForStep(stepIndex) {
+    if (!worldData || !dataLoaded) return;
+    const cfg = STORY_MAP_CONFIGS[stepIndex];
+    if (cfg) renderStoryMiniMap(cfg.id, cfg.year, cfg.scenario);
+}
+
+// ---- Cinematic helpers ----
+function injectLetterbox() {
+    if (document.querySelector(".story-letterbox-top")) return;
+    const overlay = document.getElementById("story-overlay");
+    ["top","bottom"].forEach(pos => {
+        const bar = document.createElement("div");
+        bar.className = `story-letterbox-${pos}`;
+        overlay.appendChild(bar);
+    });
+}
+
+function injectMilestoneFlash() {
+    if (document.getElementById("story-milestone-flash")) return;
+    const el = document.createElement("div");
+    el.id = "story-milestone-flash";
+    el.className = "story-milestone-flash";
+    document.body.appendChild(el);
+}
+
+// Milestone steps: step index → flash color
+const MILESTONE_FLASHES = {
+    4: "rgba(231,76,60,0.6)",    // Step 5: 2°C crossed — red
+    8: "rgba(142,68,173,0.55)",  // Step 9: high-end 2100 — purple
+    9: "rgba(39,174,96,0.45)",   // Step 10: hopeful end — green
+};
+
+function triggerMilestoneFlash(color) {
+    const el = document.getElementById("story-milestone-flash");
+    if (!el) return;
+    el.style.background = color;
+    el.classList.remove("fading");
+    void el.offsetWidth;
+    el.classList.add("firing");
+    setTimeout(() => {
+        el.classList.remove("firing");
+        el.classList.add("fading");
+    }, 130);
+    setTimeout(() => el.classList.remove("fading"), 860);
+}
+
+function pulseProgressBar() {
+    const fill = document.getElementById("story-progress-fill");
+    if (!fill) return;
+    fill.classList.remove("pulse");
+    void fill.offsetWidth;
+    fill.classList.add("pulse");
+    setTimeout(() => fill.classList.remove("pulse"), 900);
+}
+
+// ---- Overlay open/close ----
 function openStoryOverlay() {
+    injectMilestoneFlash();
+
     const overlay = document.getElementById("story-overlay");
     overlay.style.display = "flex";
-    overlay.classList.add("visible");
-    storyModeActive = true;
 
-    // Show step nav
+    requestAnimationFrame(() => {
+        overlay.classList.add("cinematic-open");
+        setTimeout(() => overlay.classList.add("visible"), 80);
+    });
+
+    storyModeActive = true;
     document.querySelector(".story-step-nav").style.display = "flex";
 
-    // Render visuals after layout
+    wxSetStep(0);
+    wxStart();
+
     requestAnimationFrame(() => {
         setTimeout(() => {
             renderStoryVisuals();
             setupStoryScroll();
             revealSection(0);
+            pulseProgressBar();
         }, 100);
     });
 
@@ -308,18 +379,49 @@ function openStoryOverlay() {
 
 function closeStoryOverlay() {
     const overlay = document.getElementById("story-overlay");
-    overlay.style.display = "none";
-    overlay.classList.remove("visible");
+    overlay.classList.remove("cinematic-open");
+    setTimeout(() => {
+        overlay.style.display = "none";
+        overlay.classList.remove("visible");
+        MOOD_CLASSES.forEach(c => overlay.classList.remove(c));
+    }, 300);
     storyModeActive = false;
     document.body.style.overflow = "";
     document.querySelector(".story-step-nav").style.display = "none";
+    wxStop();
 }
+
+let _lastRevealedStep = -1;
 
 function revealSection(index) {
     const sections = document.querySelectorAll(".story-section");
+
     sections.forEach((s, i) => {
-        if (i <= index) s.classList.add("revealed");
+        if (i < index) {
+            s.classList.add("revealed");
+            s.classList.remove("exiting");
+        } else if (i === index) {
+            s.classList.remove("exiting");
+            if (!s.classList.contains("revealed")) {
+                s.classList.add("revealed");
+                // Re-render the map for this step so it matches year/scenario
+                requestAnimationFrame(() => renderMapForStep(i));
+                // Milestone flash on first reveal of special steps
+                if (MILESTONE_FLASHES[i] && _lastRevealedStep < i) {
+                    setTimeout(() => triggerMilestoneFlash(MILESTONE_FLASHES[i]), 150);
+                }
+            }
+        } else {
+            // Future sections: don't touch
+        }
     });
+
+    if (index > _lastRevealedStep) {
+        pulseProgressBar();
+    }
+    wxSetStep(index);
+    _lastRevealedStep = Math.max(_lastRevealedStep, index);
+
     updateStoryProgress(index);
     updateStepDots(index);
 }
@@ -337,10 +439,12 @@ function updateStepDots(activeIndex) {
 }
 
 function setupStoryScroll() {
+    _lastRevealedStep = -1;
     const container = document.getElementById("story-scroll-container");
     const sections = document.querySelectorAll(".story-section");
 
-    const observer = new IntersectionObserver((entries) => {
+    // Reveal observer — section enters view
+    const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const step = parseInt(entry.target.dataset.step);
@@ -349,7 +453,40 @@ function setupStoryScroll() {
         });
     }, { root: container, threshold: 0.3 });
 
-    sections.forEach(s => observer.observe(s));
+    // Exit observer — section leaves view upward (adds .exiting briefly)
+    const exitObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+                const step = parseInt(entry.target.dataset.step);
+                // Only mark as exiting if it was the current or just-passed step
+                if (step <= _lastRevealedStep) {
+                    entry.target.classList.add("exiting");
+                    setTimeout(() => entry.target.classList.remove("exiting"), 600);
+                }
+            }
+        });
+    }, { root: container, threshold: 0.05 });
+
+    sections.forEach(s => {
+        revealObserver.observe(s);
+        exitObserver.observe(s);
+    });
+
+    // Parallax on viz frames during scroll
+    container.addEventListener("scroll", () => {
+        const scrollTop = container.scrollTop;
+        const viewH = container.clientHeight;
+        sections.forEach(section => {
+            const rect = section.getBoundingClientRect();
+            const relCenter = (rect.top + rect.height / 2) / viewH - 0.5;
+            const vizFrame = section.querySelector(".story-viz-frame");
+            if (vizFrame && section.classList.contains("revealed")) {
+                // Subtle parallax: viz moves at 15% of scroll speed
+                const nudge = relCenter * viewH * 0.08;
+                vizFrame.style.transform = `translateY(${nudge}px) scale(1)`;
+            }
+        });
+    }, { passive: true });
 
     // Step dot click
     document.querySelectorAll(".story-step-dot").forEach(dot => {
@@ -749,8 +886,336 @@ function setupEventListeners() {
     });
 }
 
+// =====================================================================
+//  WEATHER BACKGROUND ENGINE
+//  Each story step maps to a "weather mood" with its own particle system
+// =====================================================================
+
+const WX_MOODS = {
+    //  step → { mood, particles, lightning, embers, heatwave, snow }
+    0: { mood: "baseline",  rain: 0,    snow: 0.3, embers: 0,   lightning: 0,   heatwave: 0   },
+    1: { mood: "cool",      rain: 0.4,  snow: 0,   embers: 0,   lightning: 0,   heatwave: 0   },
+    2: { mood: "cool",      rain: 0.6,  snow: 0.1, embers: 0,   lightning: 0.1, heatwave: 0   },
+    3: { mood: "arctic",    rain: 0,    snow: 0.9, embers: 0,   lightning: 0,   heatwave: 0   },
+    4: { mood: "hot",       rain: 0,    snow: 0,   embers: 0.5, lightning: 0.5, heatwave: 0.4 },
+    5: { mood: "cool",      rain: 0.8,  snow: 0,   embers: 0,   lightning: 0.2, heatwave: 0   },
+    6: { mood: "warm",      rain: 0.3,  snow: 0,   embers: 0.2, lightning: 0.3, heatwave: 0.2 },
+    7: { mood: "hot",       rain: 0,    snow: 0,   embers: 0.7, lightning: 0.4, heatwave: 0.6 },
+    8: { mood: "inferno",   rain: 0,    snow: 0,   embers: 1.0, lightning: 0.7, heatwave: 1.0 },
+    9: { mood: "hope",      rain: 0.5,  snow: 0.1, embers: 0,   lightning: 0,   heatwave: 0   },
+};
+
+const MOOD_CLASSES = ["wx-mood-baseline","wx-mood-cool","wx-mood-arctic","wx-mood-warm","wx-mood-hot","wx-mood-inferno","wx-mood-hope"];
+
+let wxCanvas = null, wxCtx = null;
+let wxAnimFrame = null;
+let wxRunning = false;
+let wxCurrentMood = null;
+let wxTargetStep = 0;
+let wxBlendFactor = 1; // 0=old, 1=new
+let wxPrevConfig = null;
+let wxCurConfig  = null;
+
+// Particle pools
+let rainDrops   = [];
+let snowFlakes  = [];
+let embers      = [];
+let heatwaves   = [];
+let lightnings  = [];
+
+function wxInit() {
+    wxCanvas = document.getElementById("weather-canvas");
+    if (!wxCanvas) return;
+    wxCtx = wxCanvas.getContext("2d");
+    wxResize();
+    window.addEventListener("resize", wxResize);
+}
+
+function wxResize() {
+    if (!wxCanvas) return;
+    wxCanvas.width  = wxCanvas.offsetWidth  || window.innerWidth;
+    wxCanvas.height = wxCanvas.offsetHeight || window.innerHeight;
+}
+
+// ---- particle factories ----
+function makeRain(w, h) {
+    return {
+        x: Math.random() * w * 1.2 - w * 0.1,
+        y: Math.random() * h,
+        len: 12 + Math.random() * 20,
+        speed: 14 + Math.random() * 12,
+        angle: 0.35 + Math.random() * 0.15, // radians from vertical — wind angle
+        alpha: 0.35 + Math.random() * 0.4,
+        width: 0.8 + Math.random() * 0.8,
+    };
+}
+
+function makeSnow(w, h) {
+    return {
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 1.5 + Math.random() * 3,
+        speedY: 0.5 + Math.random() * 1.5,
+        speedX: -0.3 + Math.random() * 0.6,
+        alpha: 0.5 + Math.random() * 0.5,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.01 + Math.random() * 0.02,
+    };
+}
+
+function makeEmber(w, h) {
+    return {
+        x: Math.random() * w,
+        y: h + 10,
+        r: 1 + Math.random() * 2.5,
+        speedY: -(0.8 + Math.random() * 2.5),
+        speedX: -1.5 + Math.random() * 3,
+        alpha: 0.6 + Math.random() * 0.4,
+        life: 1.0,
+        decay: 0.003 + Math.random() * 0.006,
+        hue: 15 + Math.random() * 30, // orange-red hue
+    };
+}
+
+function makeHeatwave(w, h) {
+    return {
+        y: Math.random() * h,
+        alpha: 0,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.008 + Math.random() * 0.01,
+        thickness: 60 + Math.random() * 120,
+        color: Math.random() < 0.5 ? "255,80,20" : "180,20,60",
+    };
+}
+
+// ---- pool management ----
+const MAX_RAIN  = 300;
+const MAX_SNOW  = 160;
+const MAX_EMBER = 200;
+const MAX_HEAT  = 6;
+
+function wxSetStep(step) {
+    if (step === wxTargetStep && wxCurConfig) return;
+    wxPrevConfig = wxCurConfig || WX_MOODS[0];
+    wxCurConfig  = WX_MOODS[step] || WX_MOODS[0];
+    wxTargetStep = step;
+    wxBlendFactor = 0;
+
+    // Swap mood background class on overlay
+    const overlay = document.getElementById("story-overlay");
+    if (overlay) {
+        MOOD_CLASSES.forEach(c => overlay.classList.remove(c));
+        overlay.classList.add(`wx-mood-${wxCurConfig.mood}`);
+    }
+
+    // Schedule random lightning strikes
+    if (wxCurConfig.lightning > 0) scheduleLightning();
+}
+
+function scheduleLightning() {
+    if (!wxRunning) return;
+    const cfg = wxCurConfig;
+    if (!cfg || cfg.lightning <= 0) return;
+    const delay = 800 + Math.random() * (4000 / cfg.lightning);
+    setTimeout(() => {
+        if (wxRunning && wxCurConfig && wxCurConfig.lightning > 0) {
+            spawnLightning();
+            scheduleLightning();
+        }
+    }, delay);
+}
+
+function spawnLightning() {
+    if (!wxCanvas) return;
+    const w = wxCanvas.width;
+    const startX = w * 0.1 + Math.random() * w * 0.8;
+    lightnings.push({
+        x: startX,
+        segments: buildBolt(startX, 0, wxCanvas.height * (0.4 + Math.random() * 0.4)),
+        alpha: 1.0,
+        decay: 0.06 + Math.random() * 0.06,
+        color: Math.random() < 0.6 ? "180,80,255" : "255,200,80", // purple or gold
+        glow: 12 + Math.random() * 16,
+    });
+}
+
+function buildBolt(x, yStart, yEnd) {
+    const segs = [];
+    let cx = x, cy = yStart;
+    const steps = 8 + Math.floor(Math.random() * 8);
+    const dy = (yEnd - yStart) / steps;
+    for (let i = 0; i < steps; i++) {
+        const nx = cx + (-30 + Math.random() * 60);
+        const ny = cy + dy;
+        segs.push({ x1: cx, y1: cy, x2: nx, y2: ny });
+        // Occasionally branch
+        if (Math.random() < 0.3) {
+            segs.push(...buildBranchBolt(nx, ny, 3));
+        }
+        cx = nx; cy = ny;
+    }
+    return segs;
+}
+
+function buildBranchBolt(x, y, depth) {
+    if (depth <= 0) return [];
+    const segs = [];
+    const steps = 3 + Math.floor(Math.random() * 3);
+    let cx = x, cy = y;
+    for (let i = 0; i < steps; i++) {
+        const nx = cx + (-20 + Math.random() * 40);
+        const ny = cy + 20 + Math.random() * 20;
+        segs.push({ x1: cx, y1: cy, x2: nx, y2: ny });
+        cx = nx; cy = ny;
+    }
+    return segs;
+}
+
+// ---- main loop ----
+function wxStart() {
+    if (wxRunning) return;
+    wxRunning = true;
+    wxInit();
+    wxResize();
+    wxLoop();
+}
+
+function wxStop() {
+    wxRunning = false;
+    if (wxAnimFrame) cancelAnimationFrame(wxAnimFrame);
+    wxAnimFrame = null;
+    rainDrops = []; snowFlakes = []; embers = []; heatwaves = []; lightnings = [];
+    if (wxCtx && wxCanvas) wxCtx.clearRect(0, 0, wxCanvas.width, wxCanvas.height);
+}
+
+function wxLoop() {
+    if (!wxRunning) return;
+    wxAnimFrame = requestAnimationFrame(wxLoop);
+
+    const w = wxCanvas.width, h = wxCanvas.height;
+    const cfg = wxCurConfig || WX_MOODS[0];
+
+    // Blend factor eases from 0→1 over ~90 frames (~1.5s)
+    wxBlendFactor = Math.min(1, wxBlendFactor + 0.011);
+
+    wxCtx.clearRect(0, 0, w, h);
+
+    // ---- Rain ----
+    const targetRain = Math.floor(cfg.rain * MAX_RAIN * wxBlendFactor);
+    while (rainDrops.length < targetRain) rainDrops.push(makeRain(w, h));
+    if (rainDrops.length > targetRain) rainDrops.splice(targetRain);
+
+    wxCtx.save();
+    rainDrops.forEach(d => {
+        d.x += Math.sin(d.angle) * d.speed * 0.5;
+        d.y += d.speed;
+        if (d.y > h + d.len) { Object.assign(d, makeRain(w, h)); d.y = -d.len; }
+        wxCtx.beginPath();
+        wxCtx.moveTo(d.x, d.y);
+        wxCtx.lineTo(d.x - Math.sin(d.angle) * d.len, d.y - Math.cos(d.angle) * d.len);
+        wxCtx.strokeStyle = `rgba(140,200,255,${d.alpha})`;
+        wxCtx.lineWidth = d.width;
+        wxCtx.stroke();
+    });
+    wxCtx.restore();
+
+    // ---- Snow ----
+    const targetSnow = Math.floor(cfg.snow * MAX_SNOW * wxBlendFactor);
+    while (snowFlakes.length < targetSnow) snowFlakes.push(makeSnow(w, h));
+    if (snowFlakes.length > targetSnow) snowFlakes.splice(targetSnow);
+
+    wxCtx.save();
+    snowFlakes.forEach(s => {
+        s.wobble += s.wobbleSpeed;
+        s.x += Math.sin(s.wobble) * 0.5 + s.speedX;
+        s.y += s.speedY;
+        if (s.y > h + 10) { Object.assign(s, makeSnow(w, h)); s.y = -10; }
+        wxCtx.beginPath();
+        wxCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        wxCtx.fillStyle = `rgba(200,230,255,${s.alpha})`;
+        wxCtx.fill();
+    });
+    wxCtx.restore();
+
+    // ---- Embers ----
+    const targetEmber = Math.floor(cfg.embers * MAX_EMBER * wxBlendFactor);
+    // Spawn new ones
+    while (embers.length < targetEmber) embers.push(makeEmber(w, h));
+
+    wxCtx.save();
+    embers = embers.filter(e => e.life > 0);
+    embers.forEach(e => {
+        e.x += e.speedX + Math.sin(Date.now() * 0.001 + e.y) * 0.4;
+        e.y += e.speedY;
+        e.life -= e.decay;
+        e.alpha = e.life;
+        if (e.y < -10) e.life = 0;
+        const grd = wxCtx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 2.5);
+        grd.addColorStop(0, `hsla(${e.hue},100%,70%,${e.alpha})`);
+        grd.addColorStop(1, `hsla(${e.hue},100%,40%,0)`);
+        wxCtx.beginPath();
+        wxCtx.arc(e.x, e.y, e.r * 2.5, 0, Math.PI * 2);
+        wxCtx.fillStyle = grd;
+        wxCtx.fill();
+    });
+    // Top-up if consumed
+    while (embers.length < targetEmber) embers.push(makeEmber(w, h));
+    wxCtx.restore();
+
+    // ---- Heatwaves ----
+    const targetHeat = Math.floor(cfg.heatwave * MAX_HEAT * wxBlendFactor);
+    while (heatwaves.length < targetHeat) heatwaves.push(makeHeatwave(w, h));
+    if (heatwaves.length > targetHeat) heatwaves.splice(targetHeat);
+
+    wxCtx.save();
+    const t = Date.now() * 0.001;
+    heatwaves.forEach(hw => {
+        hw.y += 0.12;
+        if (hw.y > h + hw.thickness) { Object.assign(hw, makeHeatwave(w, h)); hw.y = -hw.thickness; }
+        hw.alpha = 0.025 + 0.02 * Math.sin(t * hw.speed * 60 + hw.phase);
+        const grd = wxCtx.createLinearGradient(0, hw.y - hw.thickness / 2, 0, hw.y + hw.thickness / 2);
+        grd.addColorStop(0,   `rgba(${hw.color},0)`);
+        grd.addColorStop(0.5, `rgba(${hw.color},${hw.alpha})`);
+        grd.addColorStop(1,   `rgba(${hw.color},0)`);
+        wxCtx.fillStyle = grd;
+        wxCtx.fillRect(0, hw.y - hw.thickness / 2, w, hw.thickness);
+    });
+    wxCtx.restore();
+
+    // ---- Lightning bolts ----
+    wxCtx.save();
+    lightnings = lightnings.filter(l => l.alpha > 0);
+    lightnings.forEach(l => {
+        l.alpha -= l.decay;
+        wxCtx.shadowBlur = l.glow;
+        wxCtx.shadowColor = `rgba(${l.color},${l.alpha})`;
+        wxCtx.strokeStyle = `rgba(${l.color},${l.alpha})`;
+        wxCtx.lineWidth = 1.5;
+        l.segments.forEach(seg => {
+            wxCtx.beginPath();
+            wxCtx.moveTo(seg.x1, seg.y1);
+            wxCtx.lineTo(seg.x2, seg.y2);
+            wxCtx.stroke();
+        });
+        // Core bright line
+        wxCtx.lineWidth = 0.5;
+        wxCtx.strokeStyle = `rgba(255,255,255,${l.alpha * 0.8})`;
+        l.segments.forEach(seg => {
+            wxCtx.beginPath();
+            wxCtx.moveTo(seg.x1, seg.y1);
+            wxCtx.lineTo(seg.x2, seg.y2);
+            wxCtx.stroke();
+        });
+    });
+    wxCtx.shadowBlur = 0;
+    wxCtx.restore();
+}
+
+// =====================================================================
+
 window.addEventListener("resize", () => {
     if (dataLoaded) loadWorldMap();
+    wxResize();
 });
 
 setupEventListeners();
